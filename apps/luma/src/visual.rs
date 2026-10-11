@@ -246,6 +246,127 @@ pub fn run(output: &Path) -> Result<(), String> {
     }
     Ok(())
 }
+/// README captures: the current UI and the real decoder, on real photographs. Everything on
+/// screen (name, size, format, camera facts) is read from the files by Luma itself; only the view
+/// state (zoom, the details card, which photo of the folder) is staged. Rendered like `run`, on
+/// the CPU at 200% display scale, so no desktop window is created.
+pub fn showcase(output: &Path, folder: &Path) -> Result<(), String> {
+    std::fs::create_dir_all(output).map_err(|e| e.to_string())?;
+    let mut files: Vec<PathBuf> = std::fs::read_dir(folder)
+        .map_err(|e| e.to_string())?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| {
+            p.extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|e| matches!(e.to_ascii_lowercase().as_str(), "jpg" | "jpeg" | "png"))
+        })
+        .collect();
+    files.sort();
+    if files.len() < 3 {
+        return Err("showcase needs at least three photos in the folder".into());
+    }
+    /// One README capture: which photo of the folder is open, the zoom as seen on screen in percent,
+    /// the point of the fitted photo to bring to the middle of the view when zoomed (an offset in
+    /// points) and whether the details card is open.
+    struct Scene {
+        name: &'static str,
+        photo: usize,
+        zoom: Option<f32>,
+        focus: [f32; 2],
+        details: bool,
+    }
+    let scene = |name, photo, zoom, focus, details| Scene {
+        name,
+        photo,
+        zoom,
+        focus,
+        details,
+    };
+    let scenes = [
+        scene("photo-1-fit", 0, None, [0.0, 0.0], false),
+        scene("photo-2-fit", 1, None, [0.0, 0.0], false),
+        scene("photo-3-fit", 2, None, [0.0, 0.0], false),
+        scene("photo-2-zoom", 1, Some(100.0), [216.0, -157.0], false),
+        scene("photo-1-details", 0, None, [0.0, 0.0], true),
+        scene("photo-2-details", 1, None, [0.0, 0.0], true),
+    ];
+    let (w, h, scale) = (1100.0_f32, 740.0_f32, 2.0_f32);
+    for Scene {
+        name,
+        photo: number,
+        zoom,
+        focus: offset,
+        details,
+    } in scenes
+    {
+        let ctx = egui::Context::default();
+        crate::ui::install(&ctx);
+        ctx.set_theme(egui::Theme::Dark);
+        ctx.set_pixels_per_point(scale);
+        let mut app = crate::ui::Luma::headless();
+        let path = files[number].clone();
+        let photo = crate::decode::decode(&path, &crate::decode::Cancel::never())?;
+        let image = [photo.width as f32, photo.height as f32];
+        app.show_photo(photo, path);
+        app.album.files = files.clone();
+        app.album.index = number;
+        if details {
+            app.visual_details();
+        }
+        let centre = Pos2::new(w * 0.5, h * 0.5);
+        if let Some(percent) = zoom {
+            // The same call a scroll at the pointer makes; the canvas is the window below the header.
+            let viewport = [w, h - 58.0];
+            let fitted = app.view.fitted_scale(image, viewport);
+            let wanted = percent / 100.0 / scale;
+            let ratio = wanted / fitted;
+            app.view.zoom_at(ratio, offset, image, viewport);
+            // Bring that point of the photo to the middle of the view.
+            app.view.pan = [-offset[0] * ratio, -offset[1] * ratio];
+        }
+        let mut textures = HashMap::new();
+        let mut picture = None;
+        for n in 0..3 {
+            let raw = egui::RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(w, h))),
+                time: Some(n as f64 / 60.0),
+                events: vec![egui::Event::PointerMoved(centre)],
+                // A real window reports its graphics driver's limit; photographs need more than egui's default.
+                max_texture_side: Some(16384),
+                ..Default::default()
+            };
+            let output_frame = ctx.run_ui(raw, |ui| app.render(ui));
+            for (id, delta) in output_frame.textures_delta.set {
+                let egui::ImageData::Color(source) = delta.image;
+                if let Some(pos) = delta.pos {
+                    let target = textures
+                        .get_mut(&id)
+                        .ok_or("Missing texture patch target")?;
+                    patch(target, &source, pos);
+                } else {
+                    textures.insert(id, (*source).clone());
+                }
+            }
+            let primitives = ctx.tessellate(output_frame.shapes, output_frame.pixels_per_point);
+            picture = Some(raster(
+                &primitives,
+                &textures,
+                (w * scale) as u32,
+                (h * scale) as u32,
+                scale,
+            ));
+            for id in output_frame.textures_delta.free {
+                textures.remove(&id);
+            }
+        }
+        picture
+            .unwrap()
+            .save(output.join(format!("{name}.png")))
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Camera facts as a typical phone photo would carry them. Values are invented for the capture.
 fn sample_exif() -> crate::exif::Exif {
     crate::exif::Exif {

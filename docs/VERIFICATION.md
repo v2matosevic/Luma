@@ -10,4 +10,4 @@ All installed payload files match their manifests. Start-menu and uninstall reco
 
 The 92 code tests passed before metadata/licensing changes. HEIC, synthetic DNG and JPEG XR samples work here; camera RAW models and JPEG XL are registered but not sampled.
 
-Not verified: owner-operated drag/drop, physical media keys/clipboard/fullscreen/mixed-DPI, long listening/A-V sync, perceptual quality, HDR display output, every rare profile or another GPU. The native computer-control helper was unavailable. Screenshots show actual UI with generated demonstration media.
+Not verified: owner-operated drag/drop, physical media keys/clipboard/fullscreen/mixed-DPI, long listening/A-V sync, perceptual quality, HDR display output, every rare profile or another GPU. The native computer-control helper was unavailable. Screenshots are staged scenes drawn by the current interface and decoder from real, openly licensed photographs; see MEDIA-CREDITS.md.
