@@ -6,9 +6,9 @@
 
 Open photos quickly, browse a folder and inspect details without modifying your originals.
 
-[Luma downloads](https://github.com/v2matosevic/Luma/releases/latest) · [Install](docs/INSTALL.md)
-· [User guide](docs/USER-GUIDE.md) · [Formats](docs/FORMATS.md)
-· [Build](docs/BUILD.md) · [Verification](docs/VERIFICATION.md)
+[Luma downloads](https://github.com/v2matosevic/Luma/releases/latest) Â· [Install](docs/INSTALL.md)
+Â· [User guide](docs/USER-GUIDE.md) Â· [Formats](docs/FORMATS.md)
+Â· [Build](docs/BUILD.md) Â· [Verification](docs/VERIFICATION.md)
 
 ![Luma application screenshot](docs/screenshots/luma.png)
 
@@ -28,10 +28,10 @@ Builds are currently unsigned; checksum and update instructions are in the insta
 
 ## License and contributing
 
-First-party code and original artwork are MIT licensed. Dependencies retain their licenses. [License](LICENSE) · [Third-party terms](docs/LICENSING.md).
+First-party code and original artwork are MIT licensed. Dependencies retain their licenses. [License](LICENSE) Â· [Third-party terms](docs/LICENSING.md).
 This is an independent app and repository. Its shared UI source is included locally, so building
 or using Luma does not require another app repository. Publisher: Version2.
-[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md).
+[Contributing](CONTRIBUTING.md) Â· [Security](SECURITY.md).
 
 The screenshot is actual application UI with generated demonstration media. See verification for
 the checks performed and remaining hardware, physical-input and perceptual limits.
