@@ -27,5 +27,4 @@ python scripts/package-release.py --app luma --exe apps/luma/target/release/luma
 
 Pass --nsis with the path to makensis.exe if it is not at the script's default location.
 Use a fresh output directory. It creates a complete portable ZIP, per-user installer,
-notices, documentation and manifest. Vesper packaging also needs the matching source
-asset's extracted licenses directory. Never omit notices or corresponding-source access.
+notices, documentation and manifest. Preserve every dependency notice and included MPL source.
